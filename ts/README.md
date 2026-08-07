@@ -15,11 +15,13 @@ and vice-versa, and both produce the same output for the same input.
 
 ```
 ts/
-  src/base44.ts            The codec (encode/decode + text helpers). Zero dependencies.
-  src/base44.test.ts       Vitest suite (round-trip, exhaustive, malformed, whitespace).
-  scripts/verify.ts        Standalone check runnable with plain Node (no framework).
-  examples/backend-function.ts   Web-standard Request->Response handler for a Base44 function.
-  examples/react-usage.tsx       Example encode/decode React component (Tailwind).
+  src/base44.ts                    The codec (encode/decode + text helpers). Zero dependencies.
+  src/base44.test.ts               Vitest suite (round-trip, exhaustive, malformed, whitespace).
+  src/handler.ts                   Request->response mapping logic (testable).
+  src/handler.test.ts              Vitest suite for the request handling.
+  scripts/verify.ts                Framework-free check runnable with plain Node.
+  examples/base44Codec/entry.ts    Drop-in Base44 platform function (Deno.serve + @base44/sdk).
+  examples/react-usage.tsx         Example encode/decode React component (Tailwind).
 ```
 
 ## API
@@ -42,17 +44,42 @@ npm test          # vitest
 npm run verify    # framework-free cross-check (Node 22+, uses --experimental-strip-types)
 ```
 
-## Using it in a Base44 function
+## Using it in a Base44 platform function
 
-`examples/backend-function.ts` is a runtime-agnostic `Request -> Response`
-handler. Wrap it in whatever signature your Base44 function expects; the core
-call is just `encode(...)` / `decode(...)`. Binary payloads travel as standard
-Base64 in JSON so the API stays clean:
+`examples/base44Codec/entry.ts` is written to the platform's exact convention:
+one self-contained file at `base44/functions/<functionName>/entry.ts`, a
+`Deno.serve(async (req) => Response)` handler, `createClientFromRequest(req)` for
+auth, `Response.json(...)`, and an OPTIONS preflight. Drop it in as
+`base44/functions/base44Codec/entry.ts` — no local imports, nothing else needed.
+
+Call it from the React frontend:
+
+```ts
+const { data } = await base44.functions.invoke("base44Codec", {
+  mode: "encode",
+  text: "Hello, World!",
+});
+// data.result === "9P9$EE$UE7C4IWESEEX0"
+
+const back = await base44.functions.invoke("base44Codec", {
+  mode: "decode",
+  base44: data.result,
+});
+// back.data.result === "Hello, World!"
+```
+
+Request/response contract (also encoded in `src/handler.ts`, which is unit-tested):
 
 ```jsonc
-// POST  { "mode": "encode", "text": "Hello" }        -> { "result": "9P9$EE..." }
-// POST  { "mode": "decode", "base44": "9P9$EE...", "as": "text" } -> { "result": "Hello" }
+// { "mode": "encode", "text": "Hello" }                            -> { success, result }
+// { "mode": "encode", "base64": "SGVsbG8=" }                       -> { success, result }  (raw bytes)
+// { "mode": "decode", "base44": "9P9$EE...", "as": "text"|"base64" } -> { success, result }
+// malformed Base44 -> HTTP 422; bad request shape -> HTTP 400
 ```
+
+By default the function requires a logged-in user (`base44.auth.me()`); remove
+those two lines to make it public, or use `asServiceRole` if you call it from
+other server-side functions.
 
 ## Using it in React
 
