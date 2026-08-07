@@ -1,0 +1,6 @@
+bin/
+obj/
+[Dd]ebug/
+[Rr]elease/
+*.user
+.vs/
