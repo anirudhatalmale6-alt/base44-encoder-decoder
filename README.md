@@ -10,6 +10,18 @@ It converts **any** text or binary input to Base44 text and decodes it back to t
 - Clear, specific error messages on malformed input
 - xUnit test suite proving round-trip integrity and edge-case handling
 
+### Two ways to use it
+
+| Half | Where it lives | For |
+|------|----------------|-----|
+| Standalone CLI / Windows `.exe` | `src/Base44` (C#/.NET) | Run it yourself or hand the `.exe` to a client |
+| TypeScript core | `ts/` | Drop into a Base44-platform app — Deno/Node serverless functions + React frontend |
+
+Both share the **same algorithm and alphabet**, so they are fully interoperable:
+bytes encoded in one decode perfectly in the other. This is verified by
+cross-interop tests and identical test vectors. See [`ts/README.md`](ts/README.md)
+for the platform/React side.
+
 ---
 
 ## The Base44 scheme

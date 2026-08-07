@@ -1,0 +1,20 @@
+{
+  "name": "@axcentrix/base44",
+  "version": "1.0.0",
+  "description": "Base44 encoder/decoder — TypeScript core for the Base44 platform (Deno/Node functions + React frontend). Byte-for-byte identical to the C# CLI.",
+  "type": "module",
+  "main": "src/base44.ts",
+  "types": "src/base44.ts",
+  "exports": {
+    ".": "./src/base44.ts"
+  },
+  "scripts": {
+    "test": "vitest run",
+    "verify": "node --experimental-strip-types scripts/verify.ts"
+  },
+  "keywords": ["base44", "encoding", "codec", "typescript"],
+  "license": "MIT",
+  "devDependencies": {
+    "vitest": "^2.1.0"
+  }
+}
